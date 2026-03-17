@@ -3,18 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    <link rel="manifest" href="manifest.json">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="チーズ管計算">
-
     <title>チーズ管計算</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
+<style>
         :root {
             --ios-bg: #000000;
             --ios-card: #1c1c1e;
@@ -286,9 +276,118 @@
         .padding-bottom {
             padding-bottom: 40px;
         }
-    </style>
+    
+/* Local utility classes replacing Tailwind dependency */
+.w-full{width:100%}
+.h-auto{height:auto}
+.h-full{height:100%}
+.flex-1{flex:1 1 0%}
+.font-bold{font-weight:700}
+.text-xs{font-size:12px}
+.text-xl{font-size:20px}
+.text-center{text-align:center}
+.text-red-500{color:#ef4444}
+.text-zinc-500{color:#71717a}
+.text-zinc-600{color:#52525b}
+.text-zinc-800{color:#27272a}
+.text-orange-500{color:#f97316}
+.opacity-70{opacity:.7}
+.ml-1{margin-left:4px}
+.mb-0\.5{margin-bottom:2px}
+.p-2{padding:8px}
+.py-8{padding-top:32px;padding-bottom:32px}
+.row-span-2{grid-row:span 2 / span 2}
+.text-\[15px\]{font-size:15px}
+.text-\[var\(--ios-silver\)\]{color:var(--ios-silver)}
+.w-\[36px\]{width:36px}
+
+html, body { overscroll-behavior: none; }
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+body.standalone .tab-wrapper{
+    top: env(safe-area-inset-top);
+}
+#installBtn, #iosInstallTip {
+    position: fixed;
+    right: 16px;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    z-index: 9999;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 18px;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 10px 24px rgba(0,0,0,.45);
+}
+#installBtn { background:#2563eb; display:none; }
+#iosInstallTip {
+    left: 16px;
+    right: 16px;
+    display:none;
+    background: rgba(28,28,30,.96);
+    border: 1px solid rgba(255,255,255,.1);
+    text-align:left;
+    line-height:1.45;
+}
+#iosInstallTip button{
+    margin-top:10px;
+    background:#2c2c2e;
+    color:#fff;
+    border:none;
+    padding:8px 12px;
+    border-radius:10px;
+}
+#boot-splash{
+    position:fixed;
+    inset:0;
+    background:#000;
+    z-index:10000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    transition:opacity .28s ease;
+}
+#boot-splash.hide{opacity:0;pointer-events:none}
+#boot-logo{
+    width:96px;height:96px;border:4px solid #fff;border-radius:28px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:42px;font-weight:700;margin-bottom:14px;
+}
+#boot-title{font-size:18px;font-weight:700;letter-spacing:.2px}
+
+</style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="チーズ管計算">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-startup-image" href="splash-1170x2532.png">
+<meta name="format-detection" content="telephone=no">
+
 </head>
 <body class="mode-90">
+
+<div id="boot-splash" aria-hidden="true">
+  <div id="boot-logo">C</div>
+  <div id="boot-title">チーズ管計算</div>
+</div>
+
+<button id="installBtn">アプリをインストール</button>
+
+<div id="iosInstallTip">
+  <div>iPhone / iPad はこのボタンではインストールできません。Safariの共有から「ホーム画面に追加」を使ってください。</div>
+  <button type="button" id="closeIosTip">閉じる</button>
+</div>
+
 
     <div id="toast">コピーしました</div>
 
@@ -307,6 +406,7 @@
                 </div>
             </div>
 
+            <!-- 90°エルボ -->
             <div id="section-90">
                 <div class="result-box" onclick="copyResult('elbow-result-val')">
                     <div class="result-label-left">切寸法</div>
@@ -336,6 +436,7 @@
                 </div>
             </div>
 
+            <!-- 変形チーズ管 -->
             <div id="section-cheese" class="hidden">
                 <div class="result-box" onclick="copyResult('cheese-result-val')">
                     <div class="result-label-left">切寸法</div>
@@ -364,6 +465,7 @@
                 </div>
             </div>
 
+            <!-- 距離計算 -->
             <div id="section-dist" class="hidden">
                 <div class="result-box" onclick="copyResult('dist-result-val')">
                     <div class="result-label-left">芯-芯寸法</div>
@@ -397,6 +499,7 @@
                 </div>
             </div>
 
+            <!-- キーパッド -->
             <div class="keypad-container">
                 <button class="key-btn" onclick="pressKey('7')">7</button>
                 <button class="key-btn" onclick="pressKey('8')">8</button>
@@ -476,6 +579,7 @@
     const distXData = { "75": 45, "100": 57, "125": 70 };
 
     function syncAndCalc(val) {
+        // サイズの同期 (Elbow / Dist のみ連動させる)
         document.getElementById('elbow-size').value = val;
         const distSelect = document.getElementById('dist-select-x');
         for(let i=0; i<distSelect.options.length; i++) {
@@ -487,6 +591,7 @@
         
         elbowCalc();
         distCalc();
+        // cheeseCalc()は値の変更があれば呼ぶが、サイズは独立
         cheeseCalc();
     }
 
@@ -594,7 +699,9 @@
         
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         document.getElementById(`nav-${tabId}`).classList.add('active');
-        document.body.className = `mode-${tabId}`;
+        
+        document.body.className = `mode-${tabId}` + (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true ? ' standalone' : '');
+
 
         ['section-90', 'section-cheese', 'section-dist'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(`section-${tabId === 'cheese' ? 'cheese' : (tabId === '90' ? '90' : 'dist')}`).classList.remove('hidden');
@@ -672,9 +779,11 @@
         resEl.innerText = resFormatted;
         diagRes.textContent = resFormatted;
 
+        // 【連動機能】他の計算入力欄（数値のみ）に結果を反映
         inputs['elbow-input-90'] = resultValueNum.toString();
         inputs['cheese-input'] = resultValueNum.toString();
         
+        // バックグラウンドで再計算 (サイズはそれぞれの画面の現在の選択を使用)
         elbowCalc();
         cheeseCalc();
     }
@@ -775,5 +884,72 @@
         }
     };
 </script>
+
+<script>
+(function () {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  function syncStandaloneClass() {
+    document.body.className = `mode-${currentTab}` + (isStandalone ? ' standalone' : '');
+  }
+
+  window.addEventListener('load', () => {
+    const splash = document.getElementById('boot-splash');
+    setTimeout(() => splash && splash.classList.add('hide'), 180);
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js');
+    });
+  }
+
+  const installBtn = document.getElementById('installBtn');
+  const iosTip = document.getElementById('iosInstallTip');
+  const closeIosTip = document.getElementById('closeIosTip');
+  const ua = window.navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!isStandalone) installBtn.style.display = 'block';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch(e) {}
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+      return;
+    }
+    if (isIOS && !isStandalone) {
+      iosTip.style.display = 'block';
+    }
+  });
+
+  if (closeIosTip) {
+    closeIosTip.addEventListener('click', () => iosTip.style.display = 'none');
+  }
+
+  if (isIOS && !isStandalone) {
+    installBtn.style.display = 'block';
+  }
+
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+  });
+
+  window.addEventListener('load', syncStandaloneClass);
+  const originalSwitchTab = window.switchTab;
+  window.switchTab = function(tabId){
+    originalSwitchTab(tabId);
+    syncStandaloneClass();
+  };
+})();
+</script>
+
 </body>
 </html>
