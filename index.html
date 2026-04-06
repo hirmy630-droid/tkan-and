@@ -221,7 +221,7 @@
         /* キーパッド */
         .keypad-container {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 1px;
             background: var(--ios-border);
             margin: 0 12px 12px;
@@ -233,7 +233,7 @@
         .key-btn {
             background: #1c1c1e;
             color: white;
-            height: 68px;
+            height: 58px;
             font-size: 24px;
             display: flex;
             align-items: center;
@@ -243,6 +243,24 @@
         .key-btn:active { background: #333; }
         .key-btn.orange { background: var(--ios-orange); font-weight: 700; }
         .key-btn.gray { background: #2c2c2e; color: var(--label-gray); font-size: 18px; font-weight: 600; }
+        .key-btn.key-clear { background: #4a4a4f; color: #ffffff; font-size: 18px; font-weight: 700; }
+        .save-btn-standalone-wrap { margin: 0 12px 12px; }
+        .save-btn-standalone {
+            width: 100%;
+            height: 56px;
+            border: 0;
+            border-radius: 14px;
+            background: var(--ios-orange);
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.1s;
+        }
+        .save-btn-standalone:active { background: #e58e00; }
+        body.mode-dist .key-btn.key-clear { background: #2c2c2e; color: var(--label-gray); font-size: 18px; font-weight: 600; }
 
         /* 履歴・図面 */
         .history-area { padding: 12px; background: #000; }
@@ -371,7 +389,6 @@ body.standalone .tab-wrapper{
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<link rel="apple-touch-startup-image" href="splash-1170x2532.png">
 <meta name="format-detection" content="telephone=no">
 
 
@@ -503,25 +520,9 @@ body.standalone .tab-wrapper{
             </div>
 
             <!-- キーパッド -->
-            <div class="keypad-container">
-                <button class="key-btn" onclick="pressKey('7')">7</button>
-                <button class="key-btn" onclick="pressKey('8')">8</button>
-                <button class="key-btn" onclick="pressKey('9')">9</button>
-                <button class="key-btn gray" id="delete-btn-label" onclick="pressKey('backspace')">貼付</button>
-                
-                <button class="key-btn" onclick="pressKey('4')">4</button>
-                <button class="key-btn" onclick="pressKey('5')">5</button>
-                <button class="key-btn" onclick="pressKey('6')">6</button>
-                <button class="key-btn gray" onclick="pressKey('clear')">AC</button>
-                
-                <button class="key-btn" onclick="pressKey('1')">1</button>
-                <button class="key-btn" onclick="pressKey('2')">2</button>
-                <button class="key-btn" onclick="pressKey('3')">3</button>
-                <button class="key-btn orange row-span-2 h-full" id="enter-btn-label" onclick="pressKey('enter')">保存</button>
-                
-                <button class="key-btn" onclick="pressKey('0')">0</button>
-                <button class="key-btn" onclick="pressKey('00')">00</button>
-                <button class="key-btn" id="dot-btn" onclick="pressKey('.')">.</button>
+            <div class="keypad-container" id="main-keypad"></div>
+            <div class="save-btn-standalone-wrap" id="save-btn-wrap">
+                <button class="save-btn-standalone" id="save-btn-standalone" onclick="pressKey('enter')">保存</button>
             </div>
 
             <div id="dist-diagram-wrapper" class="diagram-container hidden">
@@ -580,6 +581,61 @@ body.standalone .tab-wrapper{
     const elbowData = { 75: { d: 30, e: 88 }, 100: { d: 40, e: 112 }, 125: { d: 50, e: 140 } };
     const cheeseData = { "10075": { c2: 130, c6: 30 }, "12575": { c2: 144, c6: 30 }, "125100": { c2: 157, c6: 40 } };
     const distXData = { "75": 45, "100": 57, "125": 70 };
+
+    const keypadLayouts = {
+        standard: `
+            <button class="key-btn" onclick="pressKey('7')">7</button>
+            <button class="key-btn" onclick="pressKey('8')">8</button>
+            <button class="key-btn" onclick="pressKey('9')">9</button>
+
+            <button class="key-btn" onclick="pressKey('4')">4</button>
+            <button class="key-btn" onclick="pressKey('5')">5</button>
+            <button class="key-btn" onclick="pressKey('6')">6</button>
+
+            <button class="key-btn" onclick="pressKey('1')">1</button>
+            <button class="key-btn" onclick="pressKey('2')">2</button>
+            <button class="key-btn" onclick="pressKey('3')">3</button>
+
+            <button class="key-btn" onclick="pressKey('0')">0</button>
+            <button class="key-btn" onclick="pressKey('00')">00</button>
+            <button class="key-btn key-clear" id="clear-btn-label" onclick="pressKey('clear')">クリア</button>
+        `,
+        dist: `
+            <button class="key-btn" onclick="pressKey('7')">7</button>
+            <button class="key-btn" onclick="pressKey('8')">8</button>
+            <button class="key-btn" onclick="pressKey('9')">9</button>
+            <button class="key-btn gray" id="delete-btn-label" onclick="pressKey('backspace')">C</button>
+
+            <button class="key-btn" onclick="pressKey('4')">4</button>
+            <button class="key-btn" onclick="pressKey('5')">5</button>
+            <button class="key-btn" onclick="pressKey('6')">6</button>
+            <button class="key-btn gray" onclick="pressKey('clear')">AC</button>
+
+            <button class="key-btn" onclick="pressKey('1')">1</button>
+            <button class="key-btn" onclick="pressKey('2')">2</button>
+            <button class="key-btn" onclick="pressKey('3')">3</button>
+            <button class="key-btn orange row-span-2 h-full" id="enter-btn-label" onclick="pressKey('enter')">⏎</button>
+
+            <button class="key-btn" onclick="pressKey('0')">0</button>
+            <button class="key-btn" onclick="pressKey('00')">00</button>
+            <button class="key-btn" id="dot-btn" onclick="pressKey('.')">.</button>
+        `
+    };
+
+    function renderKeypad(tabId) {
+        const keypad = document.getElementById('main-keypad');
+        const saveWrap = document.getElementById('save-btn-wrap');
+        if (!keypad) return;
+        if (tabId === 'dist') {
+            keypad.innerHTML = keypadLayouts.dist;
+            keypad.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            if (saveWrap) saveWrap.classList.add('hidden');
+        } else {
+            keypad.innerHTML = keypadLayouts.standard;
+            keypad.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            if (saveWrap) saveWrap.classList.remove('hidden');
+        }
+    }
 
     function syncAndCalc(val) {
         // サイズの同期 (Elbow / Dist のみ連動させる)
@@ -710,18 +766,12 @@ body.standalone .tab-wrapper{
         document.getElementById(`section-${tabId === 'cheese' ? 'cheese' : (tabId === '90' ? '90' : 'dist')}`).classList.remove('hidden');
         document.getElementById('dist-diagram-wrapper').classList.toggle('hidden', tabId !== 'dist');
         document.getElementById('history-area').classList.toggle('hidden', tabId === 'dist');
+        renderKeypad(tabId);
         
-        const enterLabel = document.getElementById('enter-btn-label');
-        const deleteBtn = document.getElementById('delete-btn-label');
-
         if (tabId === 'dist') {
-            enterLabel.innerText = '⏎';
-            deleteBtn.innerText = 'C'; 
             focusInput('dist-input-h');
             distCalc();
         } else {
-            enterLabel.innerText = '保存';
-            deleteBtn.innerText = '貼付'; 
             const displayId = tabId === '90' ? 'elbow-input' : 'cheese-input';
             const internalId = tabId === '90' ? 'elbow-input-90' : 'cheese-input';
             updateDisplay(displayId, inputs[internalId]);
@@ -881,6 +931,7 @@ body.standalone .tab-wrapper{
         if (lastTab && (lastTab === '90' || lastTab === 'cheese' || lastTab === 'dist')) {
             switchTab(lastTab);
         } else {
+            renderKeypad('90');
             focusInput('elbow-input'); 
             elbowCalc(); 
             renderHistory();

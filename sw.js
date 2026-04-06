@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cheese-v2';
+const CACHE_NAME = 'cheese-v3';
 const APP_SHELL = [
   './',
   './index.html',
