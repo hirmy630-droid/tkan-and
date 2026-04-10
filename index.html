@@ -447,7 +447,7 @@ body.standalone .tab-wrapper{
                     </div>
                     <div class="calc-cell" style="background: #0d0d0f;">
                         <span class="input-label-left">重寸法</span>
-                        <span class="input-value text-zinc-600" id="elbow-d-val">--</span>
+                        <select id="elbow-d-select" class="input-value" onchange="elbowCalc()"></select>
                     </div>
                     <div class="calc-cell full-width focused" id="cell-elbow-input" onclick="focusInput('elbow-input')">
                         <span class="input-label-left">芯-芯寸法</span>
@@ -468,7 +468,7 @@ body.standalone .tab-wrapper{
 
                 <div class="cell-grid">
                     <div class="calc-cell">
-                        <select id="cheese-size" class="input-value" onchange="cheeseCalc()">
+                        <select id="cheese-size" class="input-value" onchange="resetCheeseC6Select(); cheeseCalc()">
                             <option value="10075" selected>100×75</option>
                             <option value="12575">125×75</option>
                             <option value="125100">125×100</option>
@@ -476,7 +476,7 @@ body.standalone .tab-wrapper{
                     </div>
                     <div class="calc-cell" style="background: #0d0d0f;">
                         <span class="input-label-left">重寸法</span>
-                        <span class="input-value text-zinc-600" id="cheese-c6-val">--</span>
+                        <select id="cheese-c6-select" class="input-value" onchange="cheeseCalc()"></select>
                     </div>
                     <div class="calc-cell full-width" id="cell-cheese-input" onclick="focusInput('cheese-input')">
                         <span class="input-label-left">芯-芯寸法</span>
@@ -578,8 +578,20 @@ body.standalone .tab-wrapper{
 
     let histories = JSON.parse(localStorage.getItem(storageKey)) || [];
 
-    const elbowData = { 75: { d: 30, e: 88 }, 100: { d: 40, e: 112 }, 125: { d: 50, e: 140 } };
-    const cheeseData = { "10075": { c2: 130, c6: 30 }, "12575": { c2: 144, c6: 30 }, "125100": { c2: 157, c6: 40 } };
+    const elbowData = { 75: { e: 88 }, 100: { e: 112 }, 125: { e: 140 } };
+    const elbowDOptions = {
+        "75": [30, 40],
+        "100": [40, 50],
+        "125": [50, 55, 65]
+    };
+    const elbowDDefaults = { "75": 30, "100": 40, "125": 50 };
+    const cheeseData = { "10075": { c2: 130 }, "12575": { c2: 144 }, "125100": { c2: 157 } };
+    const cheeseC6Options = {
+        "10075": [30, 40],
+        "12575": [30, 40],
+        "125100": [40, 50]
+    };
+    const cheeseC6Defaults = { "10075": 30, "12575": 30, "125100": 40 };
     const distXData = { "75": 45, "100": 57, "125": 70 };
 
     const keypadLayouts = {
@@ -647,11 +659,33 @@ body.standalone .tab-wrapper{
                 break;
             }
         }
-        
+
+        resetElbowDSelect();
         elbowCalc();
         distCalc();
-        // cheeseCalc()は値の変更があれば呼ぶが、サイズは独立
         cheeseCalc();
+    }
+
+    function fillSelectOptions(selectEl, options, defaultValue) {
+        if (!selectEl) return;
+        selectEl.innerHTML = '';
+        options.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = String(v);
+            opt.textContent = String(v);
+            if (Number(v) === Number(defaultValue)) opt.selected = true;
+            selectEl.appendChild(opt);
+        });
+    }
+
+    function resetElbowDSelect() {
+        const size = document.getElementById('elbow-size').value;
+        fillSelectOptions(document.getElementById('elbow-d-select'), elbowDOptions[size], elbowDDefaults[size]);
+    }
+
+    function resetCheeseC6Select() {
+        const size = document.getElementById('cheese-size').value;
+        fillSelectOptions(document.getElementById('cheese-c6-select'), cheeseC6Options[size], cheeseC6Defaults[size]);
     }
 
     function focusInput(id) {
@@ -776,7 +810,13 @@ body.standalone .tab-wrapper{
             const internalId = tabId === '90' ? 'elbow-input-90' : 'cheese-input';
             updateDisplay(displayId, inputs[internalId]);
             focusInput(displayId);
-            tabId === '90' ? elbowCalc() : cheeseCalc();
+            if (tabId === '90') {
+                if (!document.getElementById('elbow-d-select').options.length) resetElbowDSelect();
+                elbowCalc();
+            } else {
+                if (!document.getElementById('cheese-c6-select').options.length) resetCheeseC6Select();
+                cheeseCalc();
+            }
             renderHistory();
         }
     }
@@ -794,23 +834,24 @@ body.standalone .tab-wrapper{
 
     function elbowCalc() {
         const size = document.getElementById('elbow-size').value;
-        const { d, e } = elbowData[size];
-        document.getElementById('elbow-d-val').innerText = d;
+        const { e } = elbowData[size];
+        const d = parseFloat(document.getElementById('elbow-d-select').value);
         const c = parseFloat(inputs['elbow-input-90']);
         const resEl = document.getElementById('elbow-result-val');
-        if (!c) { resEl.innerText = "---"; return; }
+        if (isNaN(c) || c === 0) { resEl.innerText = "---"; return; }
         let res = Math.round((c - ((e * 2) - (d * 2))) * 10) / 10;
         resEl.innerText = formatNum(res);
     }
 
     function cheeseCalc() {
         const size = document.getElementById('cheese-size').value;
-        const { c2, c6 } = cheeseData[size];
-        document.getElementById('cheese-c6-val').innerText = c6;
+        const { c2 } = cheeseData[size];
+        const defaultC6 = cheeseC6Defaults[size];
+        const c6 = parseFloat(document.getElementById('cheese-c6-select').value);
         const c = parseFloat(inputs['cheese-input']);
         const resEl = document.getElementById('cheese-result-val');
-        if (!c) { resEl.innerText = "---"; return; }
-        let res = Math.round((c - c2) * 10) / 10;
+        if (isNaN(c) || c === 0) { resEl.innerText = "---"; return; }
+        let res = Math.round((c - c2 + ((c6 - defaultC6) * 2)) * 10) / 10;
         resEl.innerText = formatNum(res);
     }
 
@@ -927,13 +968,18 @@ body.standalone .tab-wrapper{
     }
 
     window.onload = () => { 
+        resetElbowDSelect();
+        resetCheeseC6Select();
         const lastTab = localStorage.getItem(lastTabKey);
         if (lastTab && (lastTab === '90' || lastTab === 'cheese' || lastTab === 'dist')) {
             switchTab(lastTab);
         } else {
             renderKeypad('90');
+            resetElbowDSelect();
+            resetCheeseC6Select();
             focusInput('elbow-input'); 
             elbowCalc(); 
+            cheeseCalc();
             renderHistory();
         }
     };
