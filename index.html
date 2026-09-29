@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>チーズ管計算</title>
     <script src="https://cdn.tailwindcss.com"></script>
-<style>
+    <style>
         :root {
             --ios-bg: #000000;
             --ios-card: #1c1c1e;
@@ -35,9 +35,14 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* ヘッダーエリア */
+        html, body {
+            overscroll-behavior: none;
+        }
+
         .app-header {
             padding: 16px 12px 6px;
             display: flex;
@@ -58,7 +63,6 @@
             font-weight: 600;
         }
 
-        /* タブ (固定表示) */
         .tab-wrapper {
             position: sticky;
             top: 0;
@@ -69,6 +73,10 @@
             padding: 4px 0 8px;
             display: flex;
             justify-content: center;
+        }
+
+        body.standalone .tab-wrapper {
+            top: env(safe-area-inset-top);
         }
 
         .tab-container {
@@ -106,7 +114,6 @@
         .mode-cheese #nav-cheese.active { border-color: var(--accent-cheese); color: #82c0ff; }
         .mode-dist #nav-dist.active { border-color: var(--accent-dist); color: #63ff8b; }
 
-        /* スワイプコンテナ */
         #swipe-container {
             flex: 1;
             width: 100%;
@@ -123,7 +130,6 @@
             flex-direction: column;
         }
 
-        /* 計算結果枠 */
         .result-box {
             height: 64px;
             padding: 0 16px;
@@ -141,7 +147,6 @@
         .mode-cheese .result-box { background: var(--accent-cheese); }
         .mode-dist .result-box { background: var(--accent-dist); }
 
-        /* セルグリッド */
         .cell-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -218,7 +223,6 @@
             direction: ltr;
         }
 
-        /* キーパッド */
         .keypad-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -230,6 +234,43 @@
             border: 1px solid var(--ios-border);
         }
 
+        .dist-keypad-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: #18181a;
+            margin: 0 12px 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--ios-border);
+            padding: 2px;
+        }
+
+        .keypad-separator {
+            margin: 10px 16px 8px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #3a3a3c 20%, #48484a 50%, #3a3a3c 80%, transparent);
+            position: relative;
+        }
+
+        #section-dist .cell-grid {
+            border-radius: 16px;
+            border-bottom: 1px solid var(--ios-border);
+        }
+
+        .dist-row-top {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            margin-bottom: 2px;
+        }
+
+        .dist-row-bottom {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 1px;
+        }
+
         .key-btn {
             background: #1c1c1e;
             color: white;
@@ -238,12 +279,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.1s;
+            transition: background 0.1s, transform 0.1s, box-shadow 0.1s;
         }
         .key-btn:active { background: #333; }
         .key-btn.orange { background: var(--ios-orange); font-weight: 700; }
         .key-btn.gray { background: #2c2c2e; color: var(--label-gray); font-size: 18px; font-weight: 600; }
         .key-btn.key-clear { background: #4a4a4f; color: #ffffff; font-size: 18px; font-weight: 700; }
+
         .save-btn-standalone-wrap { margin: 0 12px 12px; }
         .save-btn-standalone {
             width: 100%;
@@ -260,154 +302,191 @@
             transition: background 0.1s;
         }
         .save-btn-standalone:active { background: #e58e00; }
-        body.mode-dist .key-btn.key-clear { background: #2c2c2e; color: var(--label-gray); font-size: 18px; font-weight: 600; }
 
-        /* 履歴・図面 */
+        .dist-row-top .key-btn,
+        .dist-row-bottom .key-btn {
+            height: 46px;
+            padding: 0;
+            border-radius: 6px;
+        }
+
+        /* 3D button effects for distance calculator */
+        .dist-row-top .key-btn {
+            background: linear-gradient(180deg, #38383a 0%, #262628 100%);
+            color: #f2f2f7;
+            font-size: 16px;
+            font-weight: 600;
+            border-top: 1px solid rgba(255, 255, 255, 0.22);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(0, 0, 0, 0.4);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        .dist-row-top .key-btn:active {
+            background: linear-gradient(180deg, #242426 0%, #1e1e20 100%);
+            transform: translateY(1.5px);
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+            border-top-color: transparent;
+        }
+
+        .dist-row-top .key-btn.key-accent-light {
+            background: linear-gradient(180deg, #545458 0%, #3e3e42 100%);
+            color: #ffffff;
+            border-top: 1px solid rgba(255, 255, 255, 0.35);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.7);
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
+            border-right: 1px solid rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+        .dist-row-top .key-btn.key-accent-light:active {
+            background: linear-gradient(180deg, #36363a 0%, #2c2c30 100%);
+            transform: translateY(1.5px);
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.6);
+            border-top-color: transparent;
+        }
+
+        .dist-row-bottom .key-btn {
+            background: linear-gradient(180deg, #2c2c2e 0%, #1a1a1c 100%);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            border-top: 1px solid rgba(255, 255, 255, 0.16);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.65);
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            border-right: 1px solid rgba(0, 0, 0, 0.35);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .dist-row-bottom .key-btn:active {
+            background: linear-gradient(180deg, #18181a 0%, #121214 100%);
+            transform: translateY(1.5px);
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+            border-top-color: transparent;
+        }
+
         .history-area { padding: 12px; background: #000; }
         .history-header {
             font-size: 15px;
             font-weight: 700;
             color: var(--label-gray);
-            margin-bottom: 12px; display: flex; justify-content: space-between;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .history-item {
-            background: #111; border-bottom: 1px solid #222;
+            background: #111;
+            border-bottom: 1px solid #222;
             padding: 6px 12px;
-            display: flex; align-items: center; gap: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .history-item.is-locked { border: 1px solid var(--ios-orange); border-radius: 8px; margin-bottom: 4px; }
+        .history-item.is-locked {
+            border: 1px solid var(--ios-orange);
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
 
         .diagram-container {
-            background: #09090b; padding: 15px; margin: 12px;
-            border: 1px solid var(--ios-border); border-radius: 16px;
+            background: #09090b;
+            padding: 15px;
+            margin: 12px;
+            border: 1px solid var(--ios-border);
+            border-radius: 16px;
         }
 
         #toast {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(59, 130, 246, 0.95); color: white;
-            padding: 12px 24px; border-radius: 10px; font-weight: bold;
-            opacity: 0; z-index: 1000; transition: 0.3s; pointer-events: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(59, 130, 246, 0.95);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: bold;
+            opacity: 0;
+            z-index: 1000;
+            transition: 0.3s;
+            pointer-events: none;
         }
         #toast.show { opacity: 1; }
         .hidden { display: none !important; }
+        .padding-bottom { padding-bottom: 40px; }
 
-        .padding-bottom {
-            padding-bottom: 40px;
+        /* Utility classes */
+        .w-full { width: 100%; }
+        .h-auto { height: auto; }
+        .flex-1 { flex: 1 1 0%; }
+        .font-bold { font-weight: 700; }
+        .text-xs { font-size: 12px; }
+        .text-xl { font-size: 20px; }
+        .text-center { text-align: center; }
+        .text-red-500 { color: #ef4444; }
+        .text-zinc-500 { color: #71717a; }
+        .text-zinc-600 { color: #52525b; }
+        .text-zinc-800 { color: #27272a; }
+        .text-orange-500 { color: #f97316; }
+        .opacity-70 { opacity: .7; }
+        .ml-1 { margin-left: 4px; }
+        .mb-0\.5 { margin-bottom: 2px; }
+        .p-2 { padding: 8px; }
+        .py-8 { padding-top: 32px; padding-bottom: 32px; }
+        .text-\[15px\] { font-size: 15px; }
+        .text-\[var\(--ios-silver\)\] { color: var(--ios-silver); }
+        .w-\[36px\] { width: 36px; }
+
+        #installBtn, #iosInstallTip {
+            position: fixed;
+            right: 16px;
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            z-index: 9999;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 10px 24px rgba(0,0,0,.45);
         }
-    
-/* Local utility classes replacing Tailwind dependency */
-.w-full{width:100%}
-.h-auto{height:auto}
-.h-full{height:100%}
-.flex-1{flex:1 1 0%}
-.font-bold{font-weight:700}
-.text-xs{font-size:12px}
-.text-xl{font-size:20px}
-.text-center{text-align:center}
-.text-red-500{color:#ef4444}
-.text-zinc-500{color:#71717a}
-.text-zinc-600{color:#52525b}
-.text-zinc-800{color:#27272a}
-.text-orange-500{color:#f97316}
-.opacity-70{opacity:.7}
-.ml-1{margin-left:4px}
-.mb-0\.5{margin-bottom:2px}
-.p-2{padding:8px}
-.py-8{padding-top:32px;padding-bottom:32px}
-.row-span-2{grid-row:span 2 / span 2}
-.text-\[15px\]{font-size:15px}
-.text-\[var\(--ios-silver\)\]{color:var(--ios-silver)}
-.w-\[36px\]{width:36px}
+        #installBtn { background: #2563eb; display: none; }
+        #iosInstallTip {
+            left: 16px;
+            right: 16px;
+            display: none;
+            background: rgba(28,28,30,.96);
+            border: 1px solid rgba(255,255,255,.1);
+            text-align: left;
+            line-height: 1.45;
+        }
+        #iosInstallTip button {
+            margin-top: 10px;
+            background: #2c2c2e;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+    </style>
 
-html, body { overscroll-behavior: none; }
-body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-}
-body.standalone .tab-wrapper{
-    top: env(safe-area-inset-top);
-}
-#installBtn, #iosInstallTip {
-    position: fixed;
-    right: 16px;
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    z-index: 9999;
-    border: none;
-    border-radius: 14px;
-    padding: 14px 18px;
-    color: #fff;
-    font-weight: 700;
-    box-shadow: 0 10px 24px rgba(0,0,0,.45);
-}
-#installBtn { background:#2563eb; display:none; }
-#iosInstallTip {
-    left: 16px;
-    right: 16px;
-    display:none;
-    background: rgba(28,28,30,.96);
-    border: 1px solid rgba(255,255,255,.1);
-    text-align:left;
-    line-height:1.45;
-}
-#iosInstallTip button{
-    margin-top:10px;
-    background:#2c2c2e;
-    color:#fff;
-    border:none;
-    padding:8px 12px;
-    border-radius:10px;
-}
-#boot-splash{
-    position:fixed;
-    inset:0;
-    background:#000;
-    z-index:10000;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    transition:opacity .28s ease;
-}
-#boot-splash.hide{opacity:0;pointer-events:none}
-#boot-logo{
-    width:96px;height:96px;border:4px solid #fff;border-radius:28px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:42px;font-weight:700;margin-bottom:14px;
-}
-#boot-title{font-size:18px;font-weight:700;letter-spacing:.2px}
-
-</style>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="チーズ管計算">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<meta name="format-detection" content="telephone=no">
-
-
-
+    <link rel="manifest" href="./manifest.json?v=202609290703">
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="チーズ管計算">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <meta name="format-detection" content="telephone=no">
 </head>
 <body class="mode-90">
 
-<div id="boot-splash" aria-hidden="true">
-  <div id="boot-logo">C</div>
-  <div id="boot-title">チーズ管計算</div>
-</div>
+    <button id="installBtn">アプリをインストール</button>
 
-<button id="installBtn">アプリをインストール</button>
-
-<div id="iosInstallTip">
-  <div>iPhone / iPad はこのボタンではインストールできません。Safariの共有から「ホーム画面に追加」を使ってください。</div>
-  <button type="button" id="closeIosTip">閉じる</button>
-</div>
-
+    <div id="iosInstallTip">
+        <div>iPhone / iPad はこのボタンではインストールできません。Safariの共有から「ホーム画面に追加」を使ってください。</div>
+        <button type="button" id="closeIosTip">閉じる</button>
+    </div>
 
     <div id="toast">コピーしました</div>
 
@@ -447,7 +526,7 @@ body.standalone .tab-wrapper{
                     </div>
                     <div class="calc-cell" style="background: #0d0d0f;">
                         <span class="input-label-left">重寸法</span>
-                        <select id="elbow-d-select" class="input-value" onchange="elbowCalc()"></select>
+                        <span class="input-value text-zinc-600" id="elbow-d-val">--</span>
                     </div>
                     <div class="calc-cell full-width focused" id="cell-elbow-input" onclick="focusInput('elbow-input')">
                         <span class="input-label-left">芯-芯寸法</span>
@@ -468,7 +547,7 @@ body.standalone .tab-wrapper{
 
                 <div class="cell-grid">
                     <div class="calc-cell">
-                        <select id="cheese-size" class="input-value" onchange="resetCheeseC6Select(); cheeseCalc()">
+                        <select id="cheese-size" class="input-value" onchange="cheeseCalc()">
                             <option value="10075" selected>100×75</option>
                             <option value="12575">125×75</option>
                             <option value="125100">125×100</option>
@@ -476,7 +555,7 @@ body.standalone .tab-wrapper{
                     </div>
                     <div class="calc-cell" style="background: #0d0d0f;">
                         <span class="input-label-left">重寸法</span>
-                        <select id="cheese-c6-select" class="input-value" onchange="cheeseCalc()"></select>
+                        <span class="input-value text-zinc-600" id="cheese-c6-val">--</span>
                     </div>
                     <div class="calc-cell full-width" id="cell-cheese-input" onclick="focusInput('cheese-input')">
                         <span class="input-label-left">芯-芯寸法</span>
@@ -519,12 +598,59 @@ body.standalone .tab-wrapper{
                 </div>
             </div>
 
-            <!-- キーパッド -->
-            <div class="keypad-container" id="main-keypad"></div>
-            <div class="save-btn-standalone-wrap" id="save-btn-wrap">
-                <button class="save-btn-standalone" id="save-btn-standalone" onclick="pressKey('enter')">保存</button>
+            <!-- 90°・変形チーズ管用標準キーパッド -->
+            <div id="standard-keypad-wrap">
+                <div class="keypad-container" id="main-keypad">
+                    <button class="key-btn" onclick="pressKey('7')">7</button>
+                    <button class="key-btn" onclick="pressKey('8')">8</button>
+                    <button class="key-btn" onclick="pressKey('9')">9</button>
+
+                    <button class="key-btn" onclick="pressKey('4')">4</button>
+                    <button class="key-btn" onclick="pressKey('5')">5</button>
+                    <button class="key-btn" onclick="pressKey('6')">6</button>
+
+                    <button class="key-btn" onclick="pressKey('1')">1</button>
+                    <button class="key-btn" onclick="pressKey('2')">2</button>
+                    <button class="key-btn" onclick="pressKey('3')">3</button>
+
+                    <button class="key-btn" onclick="pressKey('0')">0</button>
+                    <button class="key-btn" onclick="pressKey('00')">00</button>
+                    <button class="key-btn key-clear" id="clear-btn-label" onclick="pressKey('clear')">クリア</button>
+                </div>
+                <div class="save-btn-standalone-wrap" id="save-btn-wrap">
+                    <button class="save-btn-standalone" id="save-btn-standalone" onclick="pressKey('enter')">保存</button>
+                </div>
             </div>
 
+            <!-- 距離計算用キーパッド（2行構成） -->
+            <div id="dist-keypad-wrap" class="hidden">
+                <div class="keypad-separator"></div>
+                <div class="dist-keypad-container">
+                    <!-- 上段（1行目）: [AC] [C] [0] [00] [.] [⏎] -->
+                    <div class="dist-row-top">
+                        <button class="key-btn key-accent-light" onclick="pressKey('clear')">AC</button>
+                        <button class="key-btn key-accent-light" id="delete-btn-label" onclick="pressKey('backspace')">C</button>
+                        <button class="key-btn" onclick="pressKey('0')">0</button>
+                        <button class="key-btn" onclick="pressKey('00')">00</button>
+                        <button class="key-btn" onclick="pressKey('.')">.</button>
+                        <button class="key-btn key-accent-light" id="dist-enter-btn-label" onclick="pressKey('enter')">⏎</button>
+                    </div>
+                    <!-- 下段（2行目）: [1] 〜 [9] -->
+                    <div class="dist-row-bottom">
+                        <button class="key-btn" onclick="pressKey('1')">1</button>
+                        <button class="key-btn" onclick="pressKey('2')">2</button>
+                        <button class="key-btn" onclick="pressKey('3')">3</button>
+                        <button class="key-btn" onclick="pressKey('4')">4</button>
+                        <button class="key-btn" onclick="pressKey('5')">5</button>
+                        <button class="key-btn" onclick="pressKey('6')">6</button>
+                        <button class="key-btn" onclick="pressKey('7')">7</button>
+                        <button class="key-btn" onclick="pressKey('8')">8</button>
+                        <button class="key-btn" onclick="pressKey('9')">9</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 距離図面 SVG -->
             <div id="dist-diagram-wrapper" class="diagram-container hidden">
                 <svg viewBox="0 0 360 210" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
                     <line x1="100" y1="10" x2="160" y2="10" stroke="white" stroke-width="2" />
@@ -549,6 +675,7 @@ body.standalone .tab-wrapper{
                 </svg>
             </div>
 
+            <!-- 履歴エリア -->
             <div id="history-area" class="history-area">
                 <div class="history-header">
                     <span>履歴</span>
@@ -576,116 +703,34 @@ body.standalone .tab-wrapper{
         'dist-input-a': ''
     };
 
-    let histories = JSON.parse(localStorage.getItem(storageKey)) || [];
-
-    const elbowData = { 75: { e: 88 }, 100: { e: 112 }, 125: { e: 140 } };
-    const elbowDOptions = {
-        "75": [30, 40],
-        "100": [40, 50],
-        "125": [50, 55, 65]
-    };
-    const elbowDDefaults = { "75": 30, "100": 40, "125": 50 };
-    const cheeseData = { "10075": { c2: 130 }, "12575": { c2: 144 }, "125100": { c2: 157 } };
-    const cheeseC6Options = {
-        "10075": [30, 40],
-        "12575": [30, 40],
-        "125100": [40, 50]
-    };
-    const cheeseC6Defaults = { "10075": 30, "12575": 30, "125100": 40 };
-    const distXData = { "75": 45, "100": 57, "125": 70 };
-
-    const keypadLayouts = {
-        standard: `
-            <button class="key-btn" onclick="pressKey('7')">7</button>
-            <button class="key-btn" onclick="pressKey('8')">8</button>
-            <button class="key-btn" onclick="pressKey('9')">9</button>
-
-            <button class="key-btn" onclick="pressKey('4')">4</button>
-            <button class="key-btn" onclick="pressKey('5')">5</button>
-            <button class="key-btn" onclick="pressKey('6')">6</button>
-
-            <button class="key-btn" onclick="pressKey('1')">1</button>
-            <button class="key-btn" onclick="pressKey('2')">2</button>
-            <button class="key-btn" onclick="pressKey('3')">3</button>
-
-            <button class="key-btn" onclick="pressKey('0')">0</button>
-            <button class="key-btn" onclick="pressKey('00')">00</button>
-            <button class="key-btn key-clear" id="clear-btn-label" onclick="pressKey('clear')">クリア</button>
-        `,
-        dist: `
-            <button class="key-btn" onclick="pressKey('7')">7</button>
-            <button class="key-btn" onclick="pressKey('8')">8</button>
-            <button class="key-btn" onclick="pressKey('9')">9</button>
-            <button class="key-btn gray" id="delete-btn-label" onclick="pressKey('backspace')">C</button>
-
-            <button class="key-btn" onclick="pressKey('4')">4</button>
-            <button class="key-btn" onclick="pressKey('5')">5</button>
-            <button class="key-btn" onclick="pressKey('6')">6</button>
-            <button class="key-btn gray" onclick="pressKey('clear')">AC</button>
-
-            <button class="key-btn" onclick="pressKey('1')">1</button>
-            <button class="key-btn" onclick="pressKey('2')">2</button>
-            <button class="key-btn" onclick="pressKey('3')">3</button>
-            <button class="key-btn orange row-span-2 h-full" id="enter-btn-label" onclick="pressKey('enter')">⏎</button>
-
-            <button class="key-btn" onclick="pressKey('0')">0</button>
-            <button class="key-btn" onclick="pressKey('00')">00</button>
-            <button class="key-btn" id="dot-btn" onclick="pressKey('.')">.</button>
-        `
-    };
-
-    function renderKeypad(tabId) {
-        const keypad = document.getElementById('main-keypad');
-        const saveWrap = document.getElementById('save-btn-wrap');
-        if (!keypad) return;
-        if (tabId === 'dist') {
-            keypad.innerHTML = keypadLayouts.dist;
-            keypad.style.gridTemplateColumns = 'repeat(4, 1fr)';
-            if (saveWrap) saveWrap.classList.add('hidden');
-        } else {
-            keypad.innerHTML = keypadLayouts.standard;
-            keypad.style.gridTemplateColumns = 'repeat(3, 1fr)';
-            if (saveWrap) saveWrap.classList.remove('hidden');
-        }
+    let histories = [];
+    try {
+        histories = JSON.parse(localStorage.getItem(storageKey)) || [];
+    } catch(e) {
+        histories = [];
     }
 
+    const elbowData = { 75: { d: 30, e: 88 }, 100: { d: 40, e: 112 }, 125: { d: 50, e: 140 } };
+    const cheeseData = { "10075": { c2: 130, c6: 30 }, "12575": { c2: 144, c6: 30 }, "125100": { c2: 157, c6: 40 } };
+    const distXData = { "75": 45, "100": 57, "125": 70 };
+
     function syncAndCalc(val) {
-        // サイズの同期 (Elbow / Dist のみ連動させる)
-        document.getElementById('elbow-size').value = val;
+        const elbSel = document.getElementById('elbow-size');
+        if (elbSel) elbSel.value = val;
+        
         const distSelect = document.getElementById('dist-select-x');
-        for(let i=0; i<distSelect.options.length; i++) {
-            if(distSelect.options[i].text === val) {
-                distSelect.selectedIndex = i;
-                break;
+        if (distSelect) {
+            for(let i=0; i<distSelect.options.length; i++) {
+                if(distSelect.options[i].text === val) {
+                    distSelect.selectedIndex = i;
+                    break;
+                }
             }
         }
-
-        resetElbowDSelect();
+        
         elbowCalc();
         distCalc();
         cheeseCalc();
-    }
-
-    function fillSelectOptions(selectEl, options, defaultValue) {
-        if (!selectEl) return;
-        selectEl.innerHTML = '';
-        options.forEach(v => {
-            const opt = document.createElement('option');
-            opt.value = String(v);
-            opt.textContent = String(v);
-            if (Number(v) === Number(defaultValue)) opt.selected = true;
-            selectEl.appendChild(opt);
-        });
-    }
-
-    function resetElbowDSelect() {
-        const size = document.getElementById('elbow-size').value;
-        fillSelectOptions(document.getElementById('elbow-d-select'), elbowDOptions[size], elbowDDefaults[size]);
-    }
-
-    function resetCheeseC6Select() {
-        const size = document.getElementById('cheese-size').value;
-        fillSelectOptions(document.getElementById('cheese-c6-select'), cheeseC6Options[size], cheeseC6Defaults[size]);
     }
 
     function focusInput(id) {
@@ -738,13 +783,27 @@ body.standalone .tab-wrapper{
             }
             isOverwriteMode = false;
         } else if (key === 'enter') {
-            handleEnter(); return;
+            handleEnter(); 
+            return;
         } else if (key === '.') {
-            if (isOverwriteMode) { val = '0.'; isOverwriteMode = false; }
-            else if (!val.toString().includes('.')) val += val === '' ? '0.' : '.';
+            if (isOverwriteMode) { 
+                val = '0.'; 
+                isOverwriteMode = false; 
+            } else if (!val.toString().includes('.')) {
+                val += val === '' ? '0.' : '.';
+            }
         } else {
-            if (isOverwriteMode) { val = key; isOverwriteMode = false; }
-            else { val = (val === '0') ? key : val + key; }
+            // Numbers 0-9 and 00
+            if (isOverwriteMode) { 
+                val = (key === '00') ? '0' : key; 
+                isOverwriteMode = false; 
+            } else { 
+                if (val === '0') {
+                    val = (key === '00') ? '0' : key;
+                } else {
+                    val = val + key;
+                }
+            }
         }
         
         inputs[focusedInputId] = val;
@@ -757,15 +816,19 @@ body.standalone .tab-wrapper{
     }
 
     function clearDistFields() {
-        ['dist-input-b', 'dist-input-h', 'dist-input-a'].forEach(id => { inputs[id] = ''; updateDisplay(id, ''); });
+        ['dist-input-b', 'dist-input-h', 'dist-input-a'].forEach(id => { 
+            inputs[id] = ''; 
+            updateDisplay(id, ''); 
+        });
         distCalc();
         isOverwriteMode = true;
         showToast("すべてクリアしました");
     }
 
     function handleEnter() {
-        if (currentTab !== 'dist') saveHistory();
-        else {
+        if (currentTab !== 'dist') {
+            saveHistory();
+        } else {
             if (focusedInputId === 'dist-input-h') focusInput('dist-input-a');
             else if (focusedInputId === 'dist-input-a') focusInput('dist-input-b');
             else focusInput('dist-input-h');
@@ -788,19 +851,33 @@ body.standalone .tab-wrapper{
 
     function switchTab(tabId) {
         currentTab = tabId;
-        localStorage.setItem(lastTabKey, tabId);
+        try { localStorage.setItem(lastTabKey, tabId); } catch(e) {}
         
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.getElementById(`nav-${tabId}`).classList.add('active');
+        const activeNav = document.getElementById(`nav-${tabId}`);
+        if (activeNav) activeNav.classList.add('active');
         
-        document.body.className = `mode-${tabId}` + (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true ? ' standalone' : '');
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        document.body.className = `mode-${tabId}` + (isStandalone ? ' standalone' : '');
 
+        ['section-90', 'section-cheese', 'section-dist'].forEach(s => {
+            const el = document.getElementById(s);
+            if (el) el.classList.add('hidden');
+        });
+        const currentSection = document.getElementById(`section-${tabId === 'cheese' ? 'cheese' : (tabId === '90' ? '90' : 'dist')}`);
+        if (currentSection) currentSection.classList.remove('hidden');
 
-        ['section-90', 'section-cheese', 'section-dist'].forEach(s => document.getElementById(s).classList.add('hidden'));
-        document.getElementById(`section-${tabId === 'cheese' ? 'cheese' : (tabId === '90' ? '90' : 'dist')}`).classList.remove('hidden');
-        document.getElementById('dist-diagram-wrapper').classList.toggle('hidden', tabId !== 'dist');
-        document.getElementById('history-area').classList.toggle('hidden', tabId === 'dist');
-        renderKeypad(tabId);
+        const distDiag = document.getElementById('dist-diagram-wrapper');
+        if (distDiag) distDiag.classList.toggle('hidden', tabId !== 'dist');
+
+        const histArea = document.getElementById('history-area');
+        if (histArea) histArea.classList.toggle('hidden', tabId === 'dist');
+
+        const isDist = tabId === 'dist';
+        const standardWrap = document.getElementById('standard-keypad-wrap');
+        const distWrap = document.getElementById('dist-keypad-wrap');
+        if (standardWrap) standardWrap.classList.toggle('hidden', isDist);
+        if (distWrap) distWrap.classList.toggle('hidden', !isDist);
         
         if (tabId === 'dist') {
             focusInput('dist-input-h');
@@ -810,48 +887,59 @@ body.standalone .tab-wrapper{
             const internalId = tabId === '90' ? 'elbow-input-90' : 'cheese-input';
             updateDisplay(displayId, inputs[internalId]);
             focusInput(displayId);
-            if (tabId === '90') {
-                if (!document.getElementById('elbow-d-select').options.length) resetElbowDSelect();
-                elbowCalc();
-            } else {
-                if (!document.getElementById('cheese-c6-select').options.length) resetCheeseC6Select();
-                cheeseCalc();
-            }
+            if (tabId === '90') elbowCalc();
+            else cheeseCalc();
             renderHistory();
         }
     }
 
     let startX = 0;
     const swipeArea = document.getElementById('swipe-container');
-    swipeArea.addEventListener('touchstart', e => startX = e.touches[0].clientX, {passive: true});
-    swipeArea.addEventListener('touchend', e => {
-        const diff = e.changedTouches[0].clientX - startX;
-        const tabs = ['90', 'cheese', 'dist'];
-        const idx = tabs.indexOf(currentTab);
-        if (diff > 80 && idx > 0) switchTab(tabs[idx - 1]);
-        else if (diff < -80 && idx < 2) switchTab(tabs[idx + 1]);
-    }, {passive: true});
+    if (swipeArea) {
+        swipeArea.addEventListener('touchstart', e => {
+            if (e.touches && e.touches[0]) startX = e.touches[0].clientX;
+        }, {passive: true});
+        swipeArea.addEventListener('touchend', e => {
+            if (!e.changedTouches || !e.changedTouches[0]) return;
+            const diff = e.changedTouches[0].clientX - startX;
+            const tabs = ['90', 'cheese', 'dist'];
+            const idx = tabs.indexOf(currentTab);
+            if (diff > 80 && idx > 0) switchTab(tabs[idx - 1]);
+            else if (diff < -80 && idx < 2) switchTab(tabs[idx + 1]);
+        }, {passive: true});
+    }
 
     function elbowCalc() {
-        const size = document.getElementById('elbow-size').value;
-        const { e } = elbowData[size];
-        const d = parseFloat(document.getElementById('elbow-d-select').value);
+        const sizeEl = document.getElementById('elbow-size');
+        if (!sizeEl) return;
+        const size = sizeEl.value;
+        const data = elbowData[size];
+        if (!data) return;
+        const { d, e } = data;
+        const dValEl = document.getElementById('elbow-d-val');
+        if (dValEl) dValEl.innerText = d;
         const c = parseFloat(inputs['elbow-input-90']);
         const resEl = document.getElementById('elbow-result-val');
-        if (isNaN(c) || c === 0) { resEl.innerText = "---"; return; }
+        if (!resEl) return;
+        if (!c) { resEl.innerText = "---"; return; }
         let res = Math.round((c - ((e * 2) - (d * 2))) * 10) / 10;
         resEl.innerText = formatNum(res);
     }
 
     function cheeseCalc() {
-        const size = document.getElementById('cheese-size').value;
-        const { c2 } = cheeseData[size];
-        const defaultC6 = cheeseC6Defaults[size];
-        const c6 = parseFloat(document.getElementById('cheese-c6-select').value);
+        const sizeEl = document.getElementById('cheese-size');
+        if (!sizeEl) return;
+        const size = sizeEl.value;
+        const data = cheeseData[size];
+        if (!data) return;
+        const { c2, c6 } = data;
+        const c6ValEl = document.getElementById('cheese-c6-val');
+        if (c6ValEl) c6ValEl.innerText = c6;
         const c = parseFloat(inputs['cheese-input']);
         const resEl = document.getElementById('cheese-result-val');
-        if (isNaN(c) || c === 0) { resEl.innerText = "---"; return; }
-        let res = Math.round((c - c2 + ((c6 - defaultC6) * 2)) * 10) / 10;
+        if (!resEl) return;
+        if (!c) { resEl.innerText = "---"; return; }
+        let res = Math.round((c - c2) * 10) / 10;
         resEl.innerText = formatNum(res);
     }
 
@@ -860,24 +948,30 @@ body.standalone .tab-wrapper{
         const h = parseFloat(inputs['dist-input-h']);
         const a = parseFloat(inputs['dist-input-a']);
         const distSel = document.getElementById('dist-select-x');
+        if (!distSel) return;
         const sizeLabel = distSel.options[distSel.selectedIndex].text;
         const x = distXData[sizeLabel] || parseFloat(distSel.value);
         
         const resEl = document.getElementById('dist-result-val');
         const diagRes = document.getElementById('dist-diagram-result');
-        if (isNaN(h) || isNaN(a)) { resEl.innerText = "---"; diagRes.textContent = "---"; return; }
+        if (isNaN(h) || isNaN(a)) { 
+            if (resEl) resEl.innerText = "---"; 
+            if (diagRes) diagRes.textContent = "---"; 
+            return; 
+        }
         
         const resultValueNum = Math.ceil(Math.sqrt(Math.pow(h - (b + x), 2) + Math.pow(a, 2)));
         const resFormatted = formatNum(resultValueNum);
         
-        resEl.innerText = resFormatted;
-        diagRes.textContent = resFormatted;
+        if (resEl) resEl.innerText = resFormatted;
+        if (diagRes) diagRes.textContent = resFormatted;
 
-        // 【連動機能】他の計算入力欄（数値のみ）に結果を反映
+        // Synchronize numeric values across other tabs
         inputs['elbow-input-90'] = resultValueNum.toString();
         inputs['cheese-input'] = resultValueNum.toString();
+        updateDisplay('elbow-input', resultValueNum.toString());
+        updateDisplay('cheese-input', resultValueNum.toString());
         
-        // バックグラウンドで再計算 (サイズはそれぞれの画面の現在の選択を使用)
         elbowCalc();
         cheeseCalc();
     }
@@ -886,8 +980,11 @@ body.standalone .tab-wrapper{
         const type = currentTab === '90' ? '90' : 'cheese';
         const inputKey = type === '90' ? 'elbow-input-90' : 'cheese-input';
         const sizeEl = document.getElementById(type === '90' ? 'elbow-size' : 'cheese-size');
+        if (!sizeEl) return;
         const sizeStr = sizeEl.options[sizeEl.selectedIndex].text;
-        const result = document.getElementById(type === '90' ? 'elbow-result-val' : 'cheese-result-val').innerText;
+        const resEl = document.getElementById(type === '90' ? 'elbow-result-val' : 'cheese-result-val');
+        if (!resEl) return;
+        const result = resEl.innerText;
         
         if (result === "---" || !inputs[inputKey]) return;
 
@@ -896,7 +993,7 @@ body.standalone .tab-wrapper{
             const idx = histories.findIndex(h => !h.locked);
             histories.splice(idx, 1);
         }
-        localStorage.setItem(storageKey, JSON.stringify(histories));
+        try { localStorage.setItem(storageKey, JSON.stringify(histories)); } catch(e) {}
         
         renderHistory();
         showToast("保存しました");
@@ -905,12 +1002,16 @@ body.standalone .tab-wrapper{
 
     function toggleLock(id) {
         const h = histories.find(x => x.id === id);
-        if (h) { h.locked = !h.locked; localStorage.setItem(storageKey, JSON.stringify(histories)); renderHistory(); }
+        if (h) { 
+            h.locked = !h.locked; 
+            try { localStorage.setItem(storageKey, JSON.stringify(histories)); } catch(e) {}
+            renderHistory(); 
+        }
     }
 
     function deleteHistoryItem(id) {
         histories = histories.filter(h => h.id !== id);
-        localStorage.setItem(storageKey, JSON.stringify(histories));
+        try { localStorage.setItem(storageKey, JSON.stringify(histories)); } catch(e) {}
         renderHistory();
         showToast("削除しました");
     }
@@ -918,9 +1019,13 @@ body.standalone .tab-wrapper{
     function renderHistory() {
         if (currentTab === 'dist') return;
         const list = document.getElementById('main-history-list');
+        if (!list) return;
         list.innerHTML = "";
         const filtered = histories.filter(h => h.mode === currentTab).reverse();
-        if (!filtered.length) { list.innerHTML = '<div class="text-center py-8 text-zinc-800 text-xs font-bold">履歴なし</div>'; return; }
+        if (!filtered.length) { 
+            list.innerHTML = '<div class="text-center py-8 text-zinc-800 text-xs font-bold">履歴なし</div>'; 
+            return; 
+        }
         filtered.forEach(h => {
             const div = document.createElement('div');
             div.className = `history-item ${h.locked ? 'is-locked' : ''}`;
@@ -947,39 +1052,43 @@ body.standalone .tab-wrapper{
 
     function clearHistory() {
         histories = histories.filter(h => h.locked || h.mode !== currentTab);
-        localStorage.setItem(storageKey, JSON.stringify(histories));
+        try { localStorage.setItem(storageKey, JSON.stringify(histories)); } catch(e) {}
         renderHistory();
         showToast("履歴を削除しました");
     }
 
-    function copyResult(id) { copyRaw(document.getElementById(id).innerText); }
+    function copyResult(id) { 
+        const el = document.getElementById(id);
+        if (el) copyRaw(el.innerText); 
+    }
+
     function copyRaw(val) {
         if (val === "---" || val === "エラー") return;
         const t = document.createElement('textarea');
         t.value = val.replace(/,/g, '');
-        document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+        document.body.appendChild(t); 
+        t.select(); 
+        document.execCommand('copy'); 
+        document.body.removeChild(t);
         showToast("コピーしました");
     }
 
     function showToast(msg) {
         const t = document.getElementById('toast');
-        t.innerText = msg; t.classList.add('show');
+        if (!t) return;
+        t.innerText = msg; 
+        t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 1000);
     }
 
     window.onload = () => { 
-        resetElbowDSelect();
-        resetCheeseC6Select();
-        const lastTab = localStorage.getItem(lastTabKey);
+        let lastTab = null;
+        try { lastTab = localStorage.getItem(lastTabKey); } catch(e) {}
         if (lastTab && (lastTab === '90' || lastTab === 'cheese' || lastTab === 'dist')) {
             switchTab(lastTab);
         } else {
-            renderKeypad('90');
-            resetElbowDSelect();
-            resetCheeseC6Select();
             focusInput('elbow-input'); 
             elbowCalc(); 
-            cheeseCalc();
             renderHistory();
         }
     };
@@ -990,18 +1099,40 @@ body.standalone .tab-wrapper{
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
   function syncStandaloneClass() {
-    document.body.className = `mode-${currentTab}` + (isStandalone ? ' standalone' : '');
+    if (document.body) {
+      document.body.className = `mode-${currentTab}` + (isStandalone ? ' standalone' : '');
+    }
   }
 
-  window.addEventListener('load', () => {
-    const splash = document.getElementById('boot-splash');
-    setTimeout(() => splash && splash.classList.add('hide'), 180);
-  });
-
+  // Safe Service Worker Registration
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js');
-    });
+    try {
+      if (window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js?v=202609290703').then((registration) => {
+            registration.onupdatefound = () => {
+              const installingWorker = registration.installing;
+              if (installingWorker == null) return;
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                }
+              };
+            };
+          }).catch(() => {});
+
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              window.location.reload();
+              refreshing = true;
+            }
+          });
+        });
+      }
+    } catch(e) {}
   }
 
   const installBtn = document.getElementById('installBtn');
@@ -1014,35 +1145,37 @@ body.standalone .tab-wrapper{
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if (!isStandalone) installBtn.style.display = 'block';
+    if (!isStandalone && installBtn) installBtn.style.display = 'block';
   });
 
-  installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      try { await deferredPrompt.userChoice; } catch(e) {}
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
-      return;
-    }
-    if (isIOS && !isStandalone) {
-      iosTip.style.display = 'block';
-    }
-  });
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        try { await deferredPrompt.userChoice; } catch(e) {}
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+        return;
+      }
+      if (isIOS && !isStandalone && iosTip) {
+        iosTip.style.display = 'block';
+      }
+    });
+  }
 
-  if (closeIosTip) {
+  if (closeIosTip && iosTip) {
     closeIosTip.addEventListener('click', () => iosTip.style.display = 'none');
   }
 
-  if (isIOS && !isStandalone) {
+  if (isIOS && !isStandalone && installBtn) {
     installBtn.style.display = 'block';
   }
 
   window.addEventListener('appinstalled', () => {
-    installBtn.style.display = 'none';
+    if (installBtn) installBtn.style.display = 'none';
   });
 
-  window.addEventListener('load', syncStandaloneClass);
+  syncStandaloneClass();
   const originalSwitchTab = window.switchTab;
   window.switchTab = function(tabId){
     originalSwitchTab(tabId);
@@ -1050,6 +1183,5 @@ body.standalone .tab-wrapper{
   };
 })();
 </script>
-
 </body>
 </html>

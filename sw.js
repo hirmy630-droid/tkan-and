@@ -1,8 +1,10 @@
-const CACHE_NAME = 'cheese-v4-20260410';
+const CACHE_NAME = 'cheese-pwa-v202609290703';
 const APP_SHELL = [
   './',
   './index.html',
+  './index.html?v=202609290703',
   './manifest.json',
+  './manifest.json?v=202609290703',
   './icon-180.png',
   './icon-192.png',
   './icon-512.png'
@@ -20,7 +22,11 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.map((key) => key !== CACHE_NAME ? caches.delete(key) : Promise.resolve())
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
       )
     ).then(() => self.clients.claim())
   );
@@ -29,33 +35,33 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  const request = event.request;
-  const url = new URL(request.url);
-
-  // HTML は常に最新優先。失敗時のみキャッシュを返す。
-  if (request.mode === 'navigate' || url.pathname.endsWith('/index.html') || url.pathname === '/' || url.pathname.endsWith('/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
-          return response;
-        })
-        .catch(() => caches.match('./index.html').then((cached) => cached || caches.match(request)))
-    );
-    return;
-  }
-
-  // それ以外はキャッシュ優先
+  // Network First strategy
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (!response || response.status !== 200 || response.type === 'opaque') return response;
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+    fetch(event.request)
+      .then((response) => {
+        // HTTPステータスが正常かつ、自ドメインのリクエストであるか確認
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+
+        // キャッシュを更新
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
         return response;
-      });
-    })
+      })
+      .catch(() => {
+        // オフライン時はキャッシュから返す
+        return caches.match(event.request);
+      })
   );
+});
+
+// 新しいワーカーへの切り替えをクライアントから強制するための処理
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
